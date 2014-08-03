@@ -14,7 +14,7 @@ The bootloader performs the following:
   in dot notation (e.g. `["x.y.z", "d.e"]`)
 * Call all `init` functions in the prescribed order
 * Remove all `init` functions from the structure to prevent repeated calls
-* Also remove `dependsOn` attribute after initialization
+* Also remove the `dependsOn` attribute after initialization
 
 Note that the bootloader expects all `init` functions to be synchronous and
 that they do not accept any parameters. Of course `init` may invoke
@@ -23,7 +23,9 @@ complete.
 
 The bootloader itself is written in object-literal module style and expects the
 application to call `module.init()`, which would execute the bootloader and
-bootstrap all registered modules.
+bootstrap all registered modules. Note that calling `module.init()` would also
+remove that method according to the rules outlined above. This is by design as
+you should not initialize twice.
 
 
 ## Setup
@@ -34,7 +36,7 @@ Install Component.IO:
 
 To install, run in your repo:
 
-    $ component install --save pixbi/bootloader
+    $ component install pixbi/bootloader
 
 To test:
 
