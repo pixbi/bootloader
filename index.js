@@ -1,4 +1,32 @@
-bootloader = {
+// @param {string}
+// @param {Object}
+// @return {Object}
+var module = function module (path, mod) {
+  var i, l, seg, keys, key;
+  var path = path.split('.');
+  var node = module;
+
+  // First, make sure the base is there
+  for (i = 0, l = path.length; i < l; i++) {
+    seg = path[i];
+    node[seg] = node[seg] || {};
+    node = node[seg];
+  }
+
+  // Then, load all properties onto it one by one to avoid replacing existing
+  // properties
+  keys = Object.keys(mod);
+  for (i = 0, l = path.length; i < l; i++) {
+    key = keys[i];
+    node[key] = mod[key];
+  }
+
+  return node;
+}
+
+module('bootloader', {
+  dependsOn: ['bootloader.quicksort'],
+
   // @type {Object.<string, boolean>}
   loaded: {},
 
@@ -13,7 +41,7 @@ bootloader = {
 
     // Don't load twice
     if (this.loaded.indexOf(name) > -1) {
-      return new Error(name + ' already loaded');
+      return new Error('"' + name + '" already loaded');
     }
 
     // Load all and make sure we only do it once
@@ -133,9 +161,11 @@ bootloader = {
     }
 
     // Sort
-    return quickSort(inits);
+    return bootloader.quicksort.sort(inits);
   },
+});
 
+module('bootloader.quicksort', {
   // Specialized quicksort adapted from
   // http://www.nczonline.net/blog/2012/11/27/computer-science-in-javascript-quicksort/
   //
@@ -143,7 +173,7 @@ bootloader = {
   // @param {number}
   // @param {number}
   // @return {Array.<bootloader.Init>}
-  quickSort: function quickSort (items, left, right) {
+  sort: function sort (items, left, right) {
     var index;
 
     if (items.length > 1) {
@@ -152,11 +182,11 @@ bootloader = {
       index = this.partition(items, left, right);
 
       if (left < index - 1) {
-        quickSort(items, left, index - 1);
+        this.sort(items, left, index - 1);
       }
 
       if (index < right) {
-        quickSort(items, index, right);
+        this.sort(items, index, right);
       }
     }
 
@@ -199,6 +229,7 @@ bootloader = {
     items[i] = items[j];
     items[j] = temp;
   }
-};
+});
 
-window.bootload = bootloader.bootload.bind(bootloader);
+// Bootstrap
+bootloader.bootload('bootloader');
