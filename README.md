@@ -14,6 +14,7 @@ The bootloader performs the following:
   in dot notation (e.g. `["x.y.z", "d.e"]`)
 * Call all `init` functions in the prescribed order
 * Remove all `init` functions from the structure to prevent repeated calls
+* Also remove `dependsOn` attribute after initialization
 
 Note that the bootloader expects all `init` functions to be synchronous and
 that they do not accept any parameters. Of course `init` may invoke

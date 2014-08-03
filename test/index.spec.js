@@ -91,13 +91,19 @@ describe('bootloader', function () {
     var subject = bootloader.sortInits;
 
     beforeEach(function () {
-      var abc, xy;
+      var abc, pq, xy;
 
       object = {
         'a.b.c': {
           score: 1,
           fn: function () {
             return 'a.b.c';
+          }
+        },
+        'p.q': {
+          score: 0,
+          fn: function () {
+            return 'p.q';
           }
         },
         'x.y': {
@@ -109,8 +115,10 @@ describe('bootloader', function () {
       };
 
       abc = object['a.b.c'];
+      pq = object['p.q'];
       xy = object['x.y'];
       abc.dependents = [xy];
+      pq.dependents = [abc];
     });
 
     it('sorts init objects', function () {
@@ -118,6 +126,7 @@ describe('bootloader', function () {
 
       expect(output[0].fn()).to.equal('x.y');
       expect(output[1].fn()).to.equal('a.b.c');
+      expect(output[2].fn()).to.equal('p.q');
     });
   });
 });
