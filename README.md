@@ -9,9 +9,14 @@ the following:
 * Collect all dependency declarations from a special attribute in each object
   named `dependsOn`, which is an array of absolute references to other modules
   in dot notation
-* Call all `init` functions in the order of the declared dependencies
+* Call all `init` functions
+* Remove all `init` functions from the structure to prevent repeated calls
 
-The bootloader expects all `init` functions are synchronous.
+The bootloader expects all `init` functions are synchronous and do not accept
+any parameters.
+
+The bootloader itself is written in object-literal module style but exposes
+the `bootload(1)` function on window.
 
 
 ## Setup

@@ -1,0 +1,10 @@
+{
+  "name": "bootloader",
+  "repo": "pixbi/bootloader",
+  "description": "Object-literal module system bootloader",
+  "version": "0.0.0",
+  "dependencies": {},
+  "scripts": [
+    "index.js"
+  ]
+}
