@@ -1,10 +1,13 @@
+var commonjs = module;
+
 // @param {string}
 // @param {Object}
 // @return {Object}
 var module = function module (path, mod) {
   var i, l, seg, keys, key;
-  var path = path.split('.');
   var node = module;
+
+  path = path.split('.');
 
   // First, make sure the base is there
   for (i = 0, l = path.length; i < l; i++) {
@@ -16,19 +19,19 @@ var module = function module (path, mod) {
   // Then, load all properties onto it one by one to avoid replacing existing
   // properties
   keys = Object.keys(mod);
-  for (i = 0, l = path.length; i < l; i++) {
+  for (i = 0, l = keys.length; i < l; i++) {
     key = keys[i];
     node[key] = mod[key];
   }
 
   return node;
-}
+};
 
 module('bootloader', {
   dependsOn: ['bootloader.quicksort'],
 
-  // @type {Object.<string, boolean>}
-  loaded: {},
+  // @type {Array.<string>}
+  loaded: [],
 
   // @typdef {Object.<string, *>}
   Init: null,
@@ -45,7 +48,7 @@ module('bootloader', {
     }
 
     // Load all and make sure we only do it once
-    this.loadLevel(window[name], [name], inits);
+    this.loadLevel(module[name] || {}, [name], inits);
     this.loaded.push(name);
 
     // Sort inits
@@ -64,11 +67,12 @@ module('bootloader', {
     var i, l, key, value;
     var keys = Object.keys(node);
     var deps = node.dependsOn;
+    var trailPath = trail.join('.');
 
     // Store dependency information
     if (deps) {
-      inits[trail] = {};
-      inits[trail].deps = deps;
+      inits[trailPath] = {};
+      inits[trailPath].deps = deps;
       delete node.dependsOn;
     }
 
@@ -76,7 +80,7 @@ module('bootloader', {
       key = keys[i];
       value = node[key];
 
-      if (typeof value === 'object' && !Array.isArray(value)) {
+      if (!!value && typeof value === 'object' && !Array.isArray(value)) {
         this.loadLevel(value, trail.concat([key]), inits);
       }
 
@@ -84,8 +88,8 @@ module('bootloader', {
         value.bind(node);
 
         // If it's `init`, save it and remove from structure
-        inits[trail] = inits[trail] || {};
-        inits[trail].fn = value;
+        inits[trailPath] = inits[trailPath] || {};
+        inits[trailPath].fn = value;
         delete node.init;
       }
     }
@@ -94,14 +98,13 @@ module('bootloader', {
   // @param {Array.<bootloader.Init>}
   // @return {Array.<bootloader.Init>}
   buildDependents: function buildDependents (inits) {
-    var i, l, j, m, k, keys, key, deps, dep, init, fn, target;
+    var i, l, j, m, k, keys, key, deps, dep, init, target;
 
     keys = Object.keys(inits);
     for (i = 0, l = keys.length; i < l; i++) {
       key = keys[i];
-      init = inits[i];
-      deps = init.deps;
-      fn = init.fn;
+      init = inits[key];
+      deps = init.deps || [];
 
       // Go through deps and build dependent list
       for (j = 0, m = deps.length; j < m; j++) {
@@ -113,9 +116,11 @@ module('bootloader', {
         }
 
         target.dependents = target.dependents || [];
-        target.dependents.push(init.trail);
+        target.dependents.push(init);
       }
     }
+
+    return inits;
   },
 
   // @param {Array.<bootloader.Init>}
@@ -127,10 +132,11 @@ module('bootloader', {
     // calculated
     paths = Object.keys(inits);
     k = paths.length - 1;
-    while (paths.length > 0) {
+    var count = 0;
+    while (paths.length > 0 && count++ < 10) {
       key = paths[k];
-      init = inits[k];
-      dependents = init.dependents;
+      init = inits[key];
+      dependents = init.dependents || [];
       fn = init.fn;
       depScore = 0;
 
@@ -138,7 +144,7 @@ module('bootloader', {
       for (i = 0, l = dependents.length; i < l; i++) {
         score = dependents[i].score;
 
-        if (score) {
+        if (typeof score === 'number') {
           depScore += score;
         } else {
           depScore = -1;
@@ -161,7 +167,7 @@ module('bootloader', {
     }
 
     // Sort
-    return bootloader.quicksort.sort(inits);
+    return module.bootloader.quicksort.sort(inits);
   },
 });
 
@@ -232,6 +238,7 @@ module('bootloader.quicksort', {
 });
 
 // Bootstrap
-bootloader.bootload('bootloader');
+module.bootloader.bootload('bootloader');
 // Expose API
-var bootload = bootloader.bootload;
+var bootload = module.bootloader.bootload;
+commonjs.exports = module;
