@@ -233,3 +233,5 @@ module('bootloader.quicksort', {
 
 // Bootstrap
 bootloader.bootload('bootloader');
+// Expose API
+var bootload = bootloader.bootload;

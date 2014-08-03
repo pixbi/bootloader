@@ -1,8 +1,8 @@
 # Frontend Bootloader
 
-The bootloader exposes a single global function `bootload(1)` that takes the
-name of the global variable that points to an object-literal namespace and do
-the following:
+The bootloader exposes a global function `bootload(1)` that takes the name of
+the global variable that points to an object-literal namespace and do the
+following:
 
 * Recursively iterate through the object
 * Bind all functions to their immediate parent
@@ -18,6 +18,10 @@ any parameters.
 The bootloader itself is written in object-literal module style but exposes
 the `bootload(1)` function on window.
 
+The bootloader also provides a `module(2)` function that takes a module path
+and the module definition. The path is written in normal do notation. Module
+will take care of making sure nothing is accidentally overwritten.
+
 
 ## Setup
 
@@ -29,40 +33,40 @@ To install:
 
     $ component install --save pixbi/bootloader
 
+The bootloader *must* run before the application code.
+
 
 ## Usage
 
 For example, assume these modules:
 
 ```js
-window.pixbi = {
-  app: {
-    dependsOn: ['pixbi.user'],
+module('pixbi.app', {
+  dependsOn: ['pixbi.user'],
 
-    initialized: '',
+  initialized: '',
 
-    init: function init () {
-      this.initialized = 'triens';
-      console.log('secundus');
-    },
-
-    isInit: function isInit () {
-      console.log(this.initialized);
-    }
+  init: function init () {
+    this.initialized = 'triens';
+    console.log('secundus');
   },
 
-  user: {
-    init: function init () {
-      console.log('primus');
-    }
+  isInit: function isInit () {
+    console.log(this.initialized);
   }
-};
+});
+
+module('pixbi.user', {
+  init: function init () {
+    console.log('primus');
+  }
+});
 ```
 
 Running:
 
 ```
-window.bootload('pixbi');
+bootload('pixbi');
 pixbi.app.isInit.call(null);
 ```
 
