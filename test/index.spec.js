@@ -1,5 +1,5 @@
-global.chai = require('chai');
-global.expect = global.chai.chai;
+var chai = require('chai');
+var expect = chai.expect;
 var module = require('../index.js');
 
 describe('bootloader', function () {
@@ -10,6 +10,20 @@ describe('bootloader', function () {
   });
 
   describe('#buildDependents', function () {
+    var subject = module.bootloader.buildDependents;
+
+    it('builds dependent lists from dependency lists', function () {
+      var a = {
+        'a.b.c': { deps: ['a.b', 'd.e'] },
+        'a.b': { deps: ['d.e'] },
+        'd.e': {}
+      };
+      var b = subject(a);
+
+      expect(b['a.b.c'].dependents).to.be.an('undefined');
+      expect(b['a.b'].dependents).to.equal(['a.b.c']);
+      expect(b['d.e'].dependents).to.equal(['d.e', 'a.b.c']);
+    });
   });
 
   describe('#sortInits', function () {
@@ -18,13 +32,9 @@ describe('bootloader', function () {
 
 describe('bootloader.quicksort', function () {
   describe('#sort', function () {
-  });
+    var subject = module.bootloader.quicksort.sort;
 
-  describe('#partition', function () {
-  });
-
-  describe('#swap', function () {
-    it('swaps', function () {
+    it('sorts', function () {
       var a = [
         { score: 5 },
         { score: 2 },
@@ -32,12 +42,12 @@ describe('bootloader.quicksort', function () {
         { score: 3 },
       ];
 
-      module.bootloader.quicksort.swap(a, 1, 3);
+      subject(a);
 
-      chai.expect(a[0].score).to.equal(5);
-      chai.expect(a[1].score).to.equal(3);
-      chai.expect(a[2].score).to.equal(9);
-      chai.expect(a[3].score).to.equal(2);
+      expect(a[0].score).to.equal(2);
+      expect(a[1].score).to.equal(3);
+      expect(a[2].score).to.equal(5);
+      expect(a[3].score).to.equal(9);
     });
   });
 });

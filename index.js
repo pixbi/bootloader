@@ -4,7 +4,7 @@ var commonjs = module;
 // @param {Object}
 // @return {Object}
 var module = function module (path, mod) {
-  var i, l, seg, keys, key;
+  var i, l, seg, keys, key, value;
   var node = module;
 
   path = path.split('.');
@@ -21,7 +21,14 @@ var module = function module (path, mod) {
   keys = Object.keys(mod);
   for (i = 0, l = keys.length; i < l; i++) {
     key = keys[i];
-    node[key] = mod[key];
+    value = mod[key];
+
+    // Bind context if it's a function
+    if (typeof value === 'function') {
+      node[key] = value.bind(node);
+    } else {
+      node[key] = value;
+    }
   }
 
   return node;
@@ -85,8 +92,6 @@ module('bootloader', {
       }
 
       if (typeof value === 'function') {
-        value.bind(node);
-
         // If it's `init`, save it and remove from structure
         inits[trailPath] = inits[trailPath] || {};
         inits[trailPath].fn = value;
