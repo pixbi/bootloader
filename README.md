@@ -31,9 +31,14 @@ Install Component.IO:
 
     $ npm install -g component
 
-To install:
+To install, run in your repo:
 
     $ component install --save pixbi/bootloader
+
+To test:
+
+    $ npm install
+    $ npm test
 
 
 ## Usage
@@ -66,7 +71,7 @@ module('pixbi.user', {
 Running:
 
 ```
-module.init('pixbi');
+module.init();
 module.pixbi.app.isInit.call(null);
 ```
 

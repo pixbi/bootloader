@@ -1,6 +1,7 @@
 var chai = require('chai');
 var expect = chai.expect;
-var module = require('../index.js');
+var module = require('../index.js').module;
+var bootloader = require('../index.js').bootloader;
 
 describe('bootloader', function () {
   var simpleGraph, complexGraph, simpleGraphDeps, complexGraphDeps, init1, init2;
@@ -27,9 +28,41 @@ describe('bootloader', function () {
     };
   });
 
+  describe('#init', function () {
+    it('initializes!', function () {
+      var count = 0;
+
+      module('pixbi.app', {
+        dependsOn: ['pixbi.user'],
+
+        initialized: -1,
+
+        init: function init () {
+          this.initialized = 3;
+          count += 2;
+        },
+
+        isInit: function isInit () {
+          count += this.initialized;
+        }
+      });
+
+      module('pixbi.user', {
+        init: function init () {
+          count += 1;
+        }
+      });
+
+      module.init();
+      module.pixbi.app.isInit.call(null);
+
+      expect(count).to.equal(6);
+    });
+  });
+
   describe('#loadLevel', function () {
     var a, inits, deps;
-    var subject = module.bootloader.loadLevel;
+    var subject = bootloader.loadLevel;
 
     beforeEach(function () {
       deps = simpleGraphDeps;
@@ -50,7 +83,7 @@ describe('bootloader', function () {
   });
 
   describe('#buildDependents', function () {
-    var subject = module.bootloader.buildDependents;
+    var subject = bootloader.buildDependents;
 
     it('builds dependent lists from dependency lists', function () {
       var a = {
@@ -68,11 +101,11 @@ describe('bootloader', function () {
 
   describe('#sortInits', function () {
     var a, inits, deps;
-    var subject = module.bootloader.sortInits;
+    var subject = bootloader.sortInits;
 
     beforeEach(function () {
       deps = complexGraphDeps;
-      a = module.bootloader.buildDependents(complexGraph);
+      a = bootloader.buildDependents(complexGraph);
       inits = [];
     });
 
@@ -84,7 +117,7 @@ describe('bootloader', function () {
 
 describe('bootloader.quicksort', function () {
   describe('#sort', function () {
-    var subject = module.bootloader.quicksort.sort;
+    var subject = bootloader.quicksort.sort;
 
     it('sorts', function () {
       var a = [

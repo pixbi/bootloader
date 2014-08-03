@@ -39,7 +39,7 @@ module('bootloader', {
   Init: null,
 
   init: function init () {
-    var i, l, fn, inits;
+    var i, l, fn, inits, key, keys;
     var sort = this.sortInits;
     var build = this.buildDependents;
     var load = this.loadLevel;
@@ -48,11 +48,13 @@ module('bootloader', {
     inits = sort(build(load(module, [], {})));
 
     // Initialize!
-    for (i = 0, l = inits.length; i < l; i++) {
-      fn = inits[i].fn;
+    keys = Object.keys(inits);
+    for (i = 0, l = keys.length; i < l; i++) {
+      key = keys[i];
+      fn = inits[key].fn;
 
       // As long as it's not this very function
-      if (fn !== bootload) {
+      if (typeof fn === 'function' && fn !== init) {
         fn();
       }
     }
@@ -240,3 +242,4 @@ module.init = module.bootloader.init;
 
 // CommonJS interface
 exports.bootloader = module.bootloader;
+exports.module = module;
