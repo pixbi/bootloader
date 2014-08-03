@@ -22,10 +22,13 @@ asynchronous operations; it's just that the bootloader does not wait for it to
 complete.
 
 The bootloader itself is written in object-literal module style and expects the
-application to call `module.init()`, which would execute the bootloader and
-bootstrap all registered modules. Note that calling `module.init()` would also
+application to call `module.init(1)`, which would execute the bootloader and
+bootstrap all registered modules. Note that calling `module.init(1)` would also
 remove that method according to the rules outlined above. This is by design as
 you should not initialize twice.
+
+`module.init(1)` takes an optional object that is the configuration object. The
+same object is passed to every `init` function during initialization.
 
 
 ## Setup

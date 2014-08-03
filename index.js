@@ -38,7 +38,8 @@ module('bootloader', {
   // @typdef {Object.<string, *>}
   Init: null,
 
-  init: function init () {
+  // @param {Object}
+  init: function init (config) {
     var i, l, fn, inits, key, keys;
     var sort = this.sortInits;
     var build = this.buildDependents;
@@ -54,7 +55,7 @@ module('bootloader', {
 
       // As long as it's not this very function
       if (typeof fn === 'function' && fn !== init) {
-        fn();
+        fn(config);
       }
     }
   },
