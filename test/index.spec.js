@@ -27,9 +27,6 @@ describe('bootloader', function () {
     };
   });
 
-  describe('#bootload', function () {
-  });
-
   describe('#loadLevel', function () {
     var a, inits, deps;
     var subject = module.bootloader.loadLevel;

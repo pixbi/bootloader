@@ -1,26 +1,28 @@
 # Frontend Bootloader
 
-The bootloader exposes a global function `bootload(1)` that takes the name of
-the global variable that points to an object-literal namespace and do the
-following:
+The bootloader provides a `module(2)` function that takes a module path and a
+module definition. The path is written in normal dot notation. `module(2)` will
+take care of setting things up and making sure nothing is accidentally
+overwritten.
+
+The bootloader performs the following:
 
 * Recursively iterate through the object
 * Bind all functions to their immediate parent
 * Collect all dependency declarations from a special attribute in each object
   named `dependsOn`, which is an array of absolute references to other modules
-  in dot notation
-* Call all `init` functions
+  in dot notation (e.g. `["x.y.z", "d.e"]`)
+* Call all `init` functions in the prescribed order
 * Remove all `init` functions from the structure to prevent repeated calls
 
-The bootloader expects all `init` functions are synchronous and do not accept
-any parameters.
+Note that the bootloader expects all `init` functions to be synchronous and
+that they do not accept any parameters. Of course `init` may invoke
+asynchronous operations; it's just that the bootloader does not wait for it to
+complete.
 
-The bootloader itself is written in object-literal module style but exposes
-the `bootload(1)` function on window.
-
-The bootloader also provides a `module(2)` function that takes a module path
-and the module definition. The path is written in normal do notation. Module
-will take care of making sure nothing is accidentally overwritten.
+The bootloader itself is written in object-literal module style and expects the
+application to call `module.init()`, which would execute the bootloader and
+bootstrap all registered modules.
 
 
 ## Setup
@@ -32,8 +34,6 @@ Install Component.IO:
 To install:
 
     $ component install --save pixbi/bootloader
-
-The bootloader *must* run before the application code.
 
 
 ## Usage
@@ -66,8 +66,8 @@ module('pixbi.user', {
 Running:
 
 ```
-bootload('pixbi');
-pixbi.app.isInit.call(null);
+module.init('pixbi');
+module.pixbi.app.isInit.call(null);
 ```
 
 would print to the console log:

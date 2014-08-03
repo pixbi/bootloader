@@ -1,9 +1,7 @@
-var commonjs = module;
-
 // @param {string}
 // @param {Object}
 // @return {Object}
-var module = function module (path, mod) {
+function module (path, object) {
   var i, l, seg, keys, key, value;
   var node = module;
 
@@ -18,10 +16,10 @@ var module = function module (path, mod) {
 
   // Then, load all properties onto it one by one to avoid replacing existing
   // properties
-  keys = Object.keys(mod);
+  keys = Object.keys(object);
   for (i = 0, l = keys.length; i < l; i++) {
     key = keys[i];
-    value = mod[key];
+    value = object[key];
 
     // Bind context if it's a function
     if (typeof value === 'function') {
@@ -32,39 +30,31 @@ var module = function module (path, mod) {
   }
 
   return node;
-};
+}
 
 module('bootloader', {
   dependsOn: ['bootloader.quicksort'],
 
-  // @type {Array.<string>}
-  loaded: [],
-
   // @typdef {Object.<string, *>}
   Init: null,
 
-  // @param {string}
-  // @return {?Error}
-  bootload: function bootload (name) {
-    var i, l, inits;
+  init: function init () {
+    var i, l, fn, inits;
     var sort = this.sortInits;
     var build = this.buildDependents;
     var load = this.loadLevel;
 
-    // Don't load twice
-    if (this.loaded.indexOf(name) > -1) {
-      return new Error('"' + name + '" already loaded');
-    }
-
-    // Load all and make sure we only do it once
-    this.loaded.push(name);
-
     // Load all, build, then sort inits
-    inits = sort(build(load(module[name] || {}, [name])));
+    inits = sort(build(load(module, [], {})));
 
     // Initialize!
     for (i = 0, l = inits.length; i < l; i++) {
-      inits[i].fn();
+      fn = inits[i].fn;
+
+      // As long as it's not this very function
+      if (fn !== bootload) {
+        fn();
+      }
     }
   },
 
@@ -77,7 +67,6 @@ module('bootloader', {
     var deps = node.dependsOn;
     var trailPath = trail.join('.');
 
-    inits = inits || {};
     inits[trailPath] = {};
 
     // Store dependency information
@@ -246,8 +235,8 @@ module('bootloader.quicksort', {
   }
 });
 
-// Bootstrap
-module.bootloader.bootload('bootloader');
 // Expose API
-module.load = module.bootloader.bootload;
-commonjs.exports = module;
+module.init = module.bootloader.init;
+
+// CommonJS interface
+exports.bootloader = module.bootloader;
