@@ -44,10 +44,9 @@ module('bootloader', {
     var build = this.buildDependents;
     var load = this.loadLevel;
 
-    // Load all, build, then sort inits
     inits = sort(build(load(module, [], {})));
 
-    // Initialize!
+    // Actually initialize!
     keys = Object.keys(inits);
     for (i = 0, l = keys.length; i < l; i++) {
       key = keys[i];
@@ -63,6 +62,7 @@ module('bootloader', {
   // @param {Object.<string, *>}
   // @param {Array.<string>}
   // @param {Array.<bootloader.Init>}
+  // @return {Array.<bootloader.Init>}
   loadLevel: function loadLevel (node, trail, inits) {
     var i, l, key, value;
     var keys = Object.keys(node);
@@ -127,6 +127,7 @@ module('bootloader', {
   // @return {Array.<bootloader.Init>}
   sortInits: function sortInits (inits) {
     var dependents, depScore, score;
+    var initArr = [];
 
     // Indefinitely iterate through all nodes until all sort scores have been
     // calculated
@@ -160,6 +161,9 @@ module('bootloader', {
 
         // Take off the list
         paths.splice(k, 1);
+
+        // Add to array for later processing
+        initArr.push(init);
       }
 
       // Move onto the next or start over
@@ -167,8 +171,8 @@ module('bootloader', {
     }
 
     // Sort
-    return module.bootloader.quicksort.sort(inits);
-  },
+    return module.bootloader.quicksort.sort(initArr);
+  }
 });
 
 module('bootloader.quicksort', {

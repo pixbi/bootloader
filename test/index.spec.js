@@ -4,30 +4,6 @@ var module = require('../index.js').module;
 var bootloader = require('../index.js').bootloader;
 
 describe('bootloader', function () {
-  var simpleGraph, complexGraph, simpleGraphDeps, complexGraphDeps, init1, init2;
-
-  beforeEach(function () {
-    init1 = function () { return 'init1'; };
-    init2 = function () { return 'init2'; };
-    simpleGraphDeps = ['x.y', 'x.y.z'];
-    simpleGraph = {
-      dependsOn: simpleGraphDeps,
-      p: 1,
-      q: {
-        r: 2,
-        s: 3,
-        init: init2
-      },
-      init: init1,
-      t: function () {}
-    };
-
-    complexGraph = {
-      dependsOn: [],
-      init: function () {}
-    };
-  });
-
   describe('#init', function () {
     it('initializes!', function () {
       var count = 0;
@@ -61,20 +37,31 @@ describe('bootloader', function () {
   });
 
   describe('#loadLevel', function () {
-    var a, inits, deps;
+    var object, deps, init1, init2;
     var subject = bootloader.loadLevel;
 
     beforeEach(function () {
-      deps = simpleGraphDeps;
-      a = simpleGraph;
-      inits = [];
+      init1 = function () { return 'init1'; };
+      init2 = function () { return 'init2'; };
+      dpes = ['x.y', 'x.y.z'];
+      object = {
+        dependsOn: deps,
+        p: 1,
+        q: {
+          r: 2,
+          s: 3,
+          init: init2
+        },
+        init: init1,
+        t: function () {}
+      };
     });
 
     it('prepares dependencies and inits', function () {
-      subject(a, ['x', 'y'], inits);
+      var inits = subject(object, ['x', 'y'], []);
 
-      expect(a.init).to.be.an('undefined');
-      expect(a.dependsOn).to.be.an('undefined');
+      expect(object.init).to.be.an('undefined');
+      expect(object.dependsOn).to.be.an('undefined');
       expect(inits['x.y'].fn()).to.equal('init1');
       expect(inits['x.y'].deps).to.equal(deps);
       expect(inits['x.y.q'].fn()).to.equal('init2');
@@ -86,31 +73,51 @@ describe('bootloader', function () {
     var subject = bootloader.buildDependents;
 
     it('builds dependent lists from dependency lists', function () {
-      var a = {
+      var object = {
         'a.b.c': { name: 'a.b.c', deps: ['a.b', 'd.e'] },
         'a.b': { name: 'a.b', deps: ['d.e'] },
         'd.e': { name: 'd.e' }
       };
-      var b = subject(a);
+      var output = subject(object);
 
-      expect(b['a.b.c'].dependents).to.be.an('undefined');
-      expect(b['a.b'].dependents).to.deep.equal([b['a.b.c']]);
-      expect(b['d.e'].dependents).to.deep.equal([b['a.b.c'], b['a.b']]);
+      expect(output['a.b.c'].dependents).to.be.an('undefined');
+      expect(output['a.b'].dependents).to.deep.equal([output['a.b.c']]);
+      expect(output['d.e'].dependents).to.deep.equal([output['a.b.c'], output['a.b']]);
     });
   });
 
   describe('#sortInits', function () {
-    var a, inits, deps;
+    var object;
     var subject = bootloader.sortInits;
 
     beforeEach(function () {
-      deps = complexGraphDeps;
-      a = bootloader.buildDependents(complexGraph);
-      inits = [];
+      var abc, xy;
+
+      object = {
+        'a.b.c': {
+          score: 1,
+          fn: function () {
+            return 'a.b.c';
+          }
+        },
+        'x.y': {
+          score: 2,
+          fn: function () {
+            return 'x.y';
+          }
+        }
+      };
+
+      abc = object['a.b.c'];
+      xy = object['x.y'];
+      abc.dependents = [xy];
     });
 
     it('sorts init objects', function () {
-      var b = subject(a);
+      var output = subject(object);
+
+      expect(output[0].fn()).to.equal('x.y');
+      expect(output[1].fn()).to.equal('a.b.c');
     });
   });
 });
