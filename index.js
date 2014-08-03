@@ -46,8 +46,10 @@ module('bootloader', {
   // @param {string}
   // @return {?Error}
   bootload: function bootload (name) {
-    var i, l, initFns;
-    var inits = {};
+    var i, l, inits;
+    var sort = this.sortInits;
+    var build = this.buildDependents;
+    var load = this.loadLevel;
 
     // Don't load twice
     if (this.loaded.indexOf(name) > -1) {
@@ -55,15 +57,14 @@ module('bootloader', {
     }
 
     // Load all and make sure we only do it once
-    this.loadLevel(module[name] || {}, [name], inits);
     this.loaded.push(name);
 
-    // Sort inits
-    initFns = this.sortInits(this.buildDependents(inits));
+    // Load all, build, then sort inits
+    inits = sort(build(load(module[name] || {}, [name])));
 
     // Initialize!
-    for (i = 0, l = initFns.length; i < l; i++) {
-      initFns[i].fn();
+    for (i = 0, l = inits.length; i < l; i++) {
+      inits[i].fn();
     }
   },
 
@@ -76,9 +77,11 @@ module('bootloader', {
     var deps = node.dependsOn;
     var trailPath = trail.join('.');
 
+    inits = inits || {};
+    inits[trailPath] = {};
+
     // Store dependency information
     if (deps) {
-      inits[trailPath] = {};
       inits[trailPath].deps = deps;
       delete node.dependsOn;
     }
@@ -91,13 +94,14 @@ module('bootloader', {
         this.loadLevel(value, trail.concat([key]), inits);
       }
 
-      if (typeof value === 'function') {
+      if (key === 'init' && typeof value === 'function') {
         // If it's `init`, save it and remove from structure
-        inits[trailPath] = inits[trailPath] || {};
         inits[trailPath].fn = value;
         delete node.init;
       }
     }
+
+    return inits;
   },
 
   // @param {Array.<bootloader.Init>}
@@ -117,7 +121,7 @@ module('bootloader', {
         target = inits[dep];
 
         if (! target) {
-          throw new Error('"' + dep + '" is expected as a dependency but is not found');
+          throw new Error('"' + dep + '" is expected as a dependency');
         }
 
         target.dependents = target.dependents || [];
@@ -245,5 +249,5 @@ module('bootloader.quicksort', {
 // Bootstrap
 module.bootloader.bootload('bootloader');
 // Expose API
-var bootload = module.bootloader.bootload;
+module.load = module.bootloader.bootload;
 commonjs.exports = module;
