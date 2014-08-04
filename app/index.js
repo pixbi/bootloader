@@ -44,11 +44,17 @@ module('bootloader', {
   // @param {Object}
   init: function init (config) {
     var i, l, fn, inits, key, keys;
-    var sort = this.sortInits;
-    var build = this.buildDependents;
-    var load = this.loadLevel;
 
-    inits = sort(build(load(module, [], {})));
+    // Load
+    inits = this.loadLevel(module, [], {});
+
+    // Remove bootloader-related inits before doing anything
+    delete inits[''];
+    delete inits.bootloader;
+
+    // Build dependency graphs and sort by score
+    inits = this.buildDependents(inits);
+    inits = this.sortInits(inits);
 
     // Actually initialize!
     keys = Object.keys(inits);
@@ -184,8 +190,9 @@ module('bootloader', {
       k = (k === 0) ? (paths.length - 1) : (k - 1);
     }
 
-    // Sort
-    return module.bootloader.quicksort.sort(initArr);
+    // Sort the initializers by score. The higher the score the more depended
+    // upon, so we need to reverse it.
+    return module.bootloader.quicksort.sort(initArr).reverse();
   }
 });
 
