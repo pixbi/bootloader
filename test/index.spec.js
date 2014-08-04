@@ -1,7 +1,8 @@
 var chai = require('chai');
 var expect = chai.expect;
-var module = require('../index.js').module;
-var bootloader = require('../index.js').bootloader;
+var exp = require('../app/index.js');
+var module = exp.module;
+var bootloader = exp.bootloader;
 
 describe('bootloader', function () {
   describe('#init', function () {
