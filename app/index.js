@@ -85,7 +85,15 @@ module('bootloader', {
       key = keys[i];
       value = node[key];
 
-      if (!!value && typeof value === 'object' && !Array.isArray(value)) {
+      if (
+          // It exists
+          !!value &&
+          // It's an object
+          typeof value === 'object' &&
+          // It's not a DOM element
+          !value instanceof Element &&
+          // It's not an array
+          !Array.isArray(value)) {
         this.loadLevel(value, trail.concat([key]), inits);
       }
 
