@@ -62,8 +62,7 @@ module('bootloader', {
       key = keys[i];
       fn = inits[key].fn;
 
-      // As long as it's not this very function
-      if (typeof fn === 'function' && fn !== init) {
+      if (typeof fn === 'function') {
         fn(config);
       }
     }
@@ -87,6 +86,14 @@ module('bootloader', {
       delete node.dependsOn;
     }
 
+    // `init` must be a function
+    if (typeof node.init === 'function') {
+      // Save it and remove from structure
+      inits[trailPath].fn = node.init;
+      delete node.init;
+    }
+
+    // Recurse
     for (i = 0, l = keys.length; i < l; i++) {
       key = keys[i];
       value = node[key];
@@ -101,15 +108,6 @@ module('bootloader', {
           // It's not an array
           (! Array.isArray(value))) {
         this.loadLevel(value, trail.concat([key]), inits);
-      }
-
-      // Must be user-defined functions
-      if ((key === 'init') &&
-          (typeof value === 'function') &&
-          (value.toString().indexOf('[native code]') < 0)) {
-        // If it's `init`, save it and remove from structure
-        inits[trailPath].fn = value;
-        delete node.init;
       }
     }
 
