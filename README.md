@@ -16,10 +16,9 @@ The bootloader performs the following:
 * Remove all `init` functions from the structure to prevent repeated calls
 * Also remove the `dependsOn` attribute after initialization
 
-Note that the bootloader expects all `init` functions to be synchronous and
-that they do not accept any parameters. Of course `init` may invoke
-asynchronous operations; it's just that the bootloader does not wait for it to
-complete.
+Note that the bootloader expects all `init` functions to be synchronous.  Of
+course `init` may invoke asynchronous operations; it's just that the bootloader
+does not wait for it to complete.
 
 The bootloader itself is written in object-literal module style and expects the
 application to call `module.init(1)`, which would execute the bootloader and
@@ -54,7 +53,7 @@ To test:
 
 ## Usage
 
-For example, assume these modules:
+Assume these modules:
 
 ```js
 module('pixbi.app', {
