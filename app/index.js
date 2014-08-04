@@ -87,17 +87,20 @@ module('bootloader', {
 
       if (
           // It exists
-          !!value &&
+          (!! value) &&
           // It's an object
-          typeof value === 'object' &&
+          (typeof value === 'object') &&
           // It's not a DOM element
-          !value instanceof Element &&
+          (! (value instanceof Element)) &&
           // It's not an array
-          !Array.isArray(value)) {
+          (! Array.isArray(value))) {
         this.loadLevel(value, trail.concat([key]), inits);
       }
 
-      if (key === 'init' && typeof value === 'function') {
+      // Must be user-defined functions
+      if ((key === 'init') &&
+          (typeof value === 'function') &&
+          (value.toString().indexOf('[native code]') < 0)) {
         // If it's `init`, save it and remove from structure
         inits[trailPath].fn = value;
         delete node.init;
