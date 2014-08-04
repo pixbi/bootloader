@@ -138,15 +138,14 @@ module('bootloader', {
   // @param {Array.<bootloader.Init>}
   // @return {Array.<bootloader.Init>}
   sortInits: function sortInits (inits) {
-    var dependents, depScore, score;
+    var dependents, depScore, score, paths, k, key, init, fn, i, l;
     var initArr = [];
 
     // Indefinitely iterate through all nodes until all sort scores have been
     // calculated
     paths = Object.keys(inits);
     k = paths.length - 1;
-    var count = 0;
-    while (paths.length > 0 && count++ < 10) {
+    while (paths.length > 0) {
       key = paths[k];
       init = inits[key];
       dependents = init.dependents || [];
