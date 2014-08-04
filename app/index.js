@@ -1,11 +1,14 @@
-// @param {string}
-// @param {Object}
+// @param {string=}
+// @param {Object=}
 // @return {Object}
 function module (path, object) {
   var i, l, seg, keys, key, value;
   var node = module;
 
-  path = path.split('.');
+  object = object || {};
+  path = (path || '').split('.');
+  // Handle edge case with `split()`
+  if (path.length === 1 && path[0] === '') path = [];
 
   // First, make sure the base is there
   for (i = 0, l = path.length; i < l; i++) {

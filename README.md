@@ -30,6 +30,11 @@ you should not initialize twice.
 `module.init(1)` takes an optional object that is the configuration object. The
 same object is passed to every `init` function during initialization.
 
+Note that you can simply call `module(1)` with just the path. It would return
+the object at that level without adding or modifying any property. For
+instance, calling `module('a.b.c').d();` is the same as calling
+`module.a.b.c.d()`, which is the same as calling `module().a.b.c.d()`.
+
 
 ## Setup
 
