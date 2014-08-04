@@ -246,5 +246,6 @@ module('bootloader.quicksort', {
 module.init = module.bootloader.init;
 
 // CommonJS interface
-exports.bootloader = module.bootloader;
-exports.module = module;
+var exports;
+if (exports) exports.bootloader = module.bootloader;
+if (exports) exports.module = module;
