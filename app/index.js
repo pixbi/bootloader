@@ -147,6 +147,9 @@ module('bootloader', {
   sortInits: function sortInits (inits) {
     var dependents, depScore, score, paths, k, key, init, fn, i, l;
     var initArr = [];
+    // Limit on how long this can run
+    var threshold = 10000;
+    var count = 0;
 
     // Indefinitely iterate through all nodes until all sort scores have been
     // calculated
@@ -158,6 +161,11 @@ module('bootloader', {
       dependents = init.dependents || [];
       fn = init.fn;
       depScore = 0;
+
+      // Circular dependency check
+      if (count++ > threshold) {
+        throw new Error('Unterminated sort: there may be an `init` circular dependency.');
+      }
 
       // Accumulate dependents' scores
       for (i = 0, l = dependents.length; i < l; i++) {
