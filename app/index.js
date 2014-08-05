@@ -70,8 +70,8 @@ module('bootloader', {
   asynchronify: function asynchronify (fns) {
     var output = [];
 
-    function async (fn, done) {
-      fn();
+    function async (fn, done, params) {
+      fn(params);
       done();
     }
 
@@ -101,8 +101,8 @@ module('bootloader', {
   // @param {function=}
   // @return {Array.<function>}
   chain: function chain (fns, done) {
-    function seq (fn1, fn2) {
-      fn1(fn2);
+    function seq (fn1, fn2, params) {
+      fn1(fn2, params);
     }
 
     fns.push(done || function () {});
