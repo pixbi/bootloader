@@ -91,13 +91,14 @@ module('bootloader', {
   // @param {Array.<function>}
   // @return {Array.<function>}
   chain: function chain (fns) {
-    function seq (fn1, fn2, params) {
-      fn1(params, fn2);
+    function seq (fn1, fn2, i, params) {
+      fn2 = fn2 || function () {};
+      fn1(params, fn2.bind(null, params));
     }
 
     // Start from the second to the end
-    for (var i = fns.length - 2, l = 0; i >= l; i--) {
-      fns[i] = seq.bind(this, fns[i], fns[i + 1]);
+    for (var i = fns.length - 1, l = 0; i >= l; i--) {
+      fns[i] = seq.bind(this, fns[i], fns[i + 1], i);
     }
 
     // Only need the head
