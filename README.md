@@ -26,7 +26,7 @@ bootstrap all registered modules. Note that calling `module.init(1)` would also
 remove that method according to the rules outlined above. This is by design as
 you should not initialize twice.
 
-`module.init(1)` takes an optional object that is the configuration object. The
+`module.init(1)` takes an optional object that is the parameter object. The
 same object is passed to every `init` function during initialization.
 
 Note that you can simply call `module(1)` with just the path. It would return

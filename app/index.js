@@ -42,9 +42,9 @@ module('bootloader', {
   Init: null,
 
   // @param {Object}
-  init: function init (config) {
+  init: function init (params) {
     var i, l, fn, inits, key, keys;
-    config = config || {};
+    params = params || {};
 
     // Load
     inits = this.loadLevel(module, [], {});
@@ -64,7 +64,7 @@ module('bootloader', {
       fn = inits[key].fn;
 
       if (typeof fn === 'function') {
-        fn(config);
+        fn(params);
       }
     }
   },
