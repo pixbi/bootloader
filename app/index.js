@@ -9,6 +9,31 @@ function module (path, object) {
   var i, l, seg, keys, key, value;
   var node = module;
 
+  // @param {function}
+  // @param {*}
+  // @return {function}
+  function asynchronify (fn, ctx) {
+    function async (fn, params, done) {
+      fn.call(this, params);
+      done && done();
+    }
+
+    var fnStr = fn.toString();
+    var argStartIndex = fnStr.indexOf('(');
+    var argEndIndex = fnStr.indexOf(')');
+    var argList = fnStr.substring(argStartIndex + 1, argEndIndex);
+    var args = argList.replace(/ /g, '');
+
+    // Normal function -> "asynchronous" function
+    if (args.indexOf('done') < 0) {
+      fn = async.bind(ctx, fn);
+    } else {
+      fn = fn.bind(ctx);
+    }
+
+    return fn;
+  }
+
   object = object || {};
   path = (path || '').split('.');
   // Handle edge case with `split()`
@@ -28,8 +53,11 @@ function module (path, object) {
     key = keys[i];
     value = object[key];
 
+    // Force async for inits
+    if (key === 'init') {
+      node[key] = value = asynchronify(value, node);
     // Bind context if it's a function
-    if (typeof value === 'function') {
+    } else if (typeof value === 'function') {
       node[key] = value.bind(node);
     } else {
       node[key] = value;
@@ -49,63 +77,23 @@ module('bootloader', {
   init: function init (params) {
     params = params || {};
 
-    // Load
-    var inits = this.loadLevel(module, [], {});
-
-    // Remove bootloader-related inits before doing anything
-    delete inits[''];
-    delete inits.bootloader;
-
+    var load = this.loadLevel;
     var build = this.buildDependents;
     var sort = this.sortInits;
-    var async = this.asynchronify;
+    var compact = this.compact;
     var chain = this.chain;
-    var fn = chain(async(sort(build(inits))));
+    var fn = chain(compact(sort(build(load(module, [], {})))));
 
     fn(params);
   },
 
-  // @param {Array.<function>}
-  // @return {Array.<function>}
-  asynchronify: function asynchronify (fns) {
-    var output = [];
-
-    function async (fn, done, params) {
-      fn(params);
-      done();
-    }
-
-    for (i = 0, l = fns.length; i < l; i++) {
-      var fn = fns[i];
-
-      if (typeof fn === 'function') {
-        var fnStr = fn.toString();
-        var argStartIndex = fnStr.indexOf('(');
-        var argEndIndex = fnStr.indexOf(')');
-        var argList = fnStr.substring(argStartIndex + 1, argEndIndex);
-        var args = argList.replace(/ /g, '');
-
-        // Normal function -> "asynchronous" function
-        if (args.length === 0) {
-          fn = async.bind(this, fn);
-        }
-
-        output.push(fn);
-      }
-    }
-
-    return output;
-  },
 
   // @param {Array.<function>}
-  // @param {function=}
   // @return {Array.<function>}
-  chain: function chain (fns, done) {
+  chain: function chain (fns) {
     function seq (fn1, fn2, params) {
-      fn1(fn2, params);
+      fn1(params, fn2);
     }
-
-    fns.push(done || function () {});
 
     // Start from the second to the end
     for (var i = fns.length - 2, l = 0; i >= l; i--) {
@@ -114,6 +102,14 @@ module('bootloader', {
 
     // Only need the head
     return fns[0];
+  },
+
+  // @param {Array.<function>}
+  compact: function compact (fns) {
+    return fns.reduce(function (prev, cur) {
+      var fn = cur.fn;
+      return (typeof fn === 'function') ? prev.concat([fn]) : prev;
+    }, []);
   },
 
   // @param {Object.<string, *>}
@@ -154,8 +150,13 @@ module('bootloader', {
           (! (value instanceof Element)) &&
           // It's not an array
           (! Array.isArray(value))) {
-        this.loadLevel(value, trail.concat([key]), inits);
+        loadLevel(value, trail.concat([key]), inits);
       }
+    }
+
+    // Can't init the bootloader or the top-level module
+    if (trailPath === '' || trailPath === 'bootloader') {
+      delete inits[trailPath];
     }
 
     return inits;
@@ -190,7 +191,7 @@ module('bootloader', {
   },
 
   // @param {Array.<bootloader.Init>}
-  // @return {Array.<bootloader.Init>}
+  // @return {Array.<function>}
   sortInits: function sortInits (inits) {
     var dependents, depScore, score, paths, k, key, init, fn, i, l;
     var initArr = [];
@@ -245,12 +246,7 @@ module('bootloader', {
 
     // Sort the initializers by score. The higher the score the more depended
     // upon, so we need to reverse it.
-    inits = module.bootloader.quicksort.sort(initArr).reverse();
-
-    // We only care about the functions
-    return inits.map(function (init) {
-      return init.fn;
-    });
+    return module.bootloader.quicksort.sort(initArr).reverse();
   }
 });
 
