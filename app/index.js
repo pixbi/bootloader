@@ -62,7 +62,7 @@ module('bootloader', {
     var chain = this.chain;
     var fn = chain(async(sort(build(inits))));
 
-    fn();
+    fn(params);
   },
 
   // @param {Array.<function>}
