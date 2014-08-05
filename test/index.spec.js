@@ -125,9 +125,56 @@ describe('bootloader', function () {
     it('sorts init objects', function () {
       var output = subject(object);
 
-      expect(output[0].fn()).to.equal('x.y');
-      expect(output[1].fn()).to.equal('a.b.c');
-      expect(output[2].fn()).to.equal('p.q');
+      expect(output[0]()).to.equal('p.q');
+      expect(output[1]()).to.equal('a.b.c');
+      expect(output[2]()).to.equal('x.y');
+    });
+  });
+
+  describe('#chain', function () {
+    it('chains all inits', function (done) {
+      var asynchronify = bootloader.asynchronify ;
+      var chain = bootloader.chain;
+      var output = [];
+      var fns = [
+        // 0
+        function () {
+          output.push(Date.now());
+        },
+        // 1
+        function (done) {
+          setTimeout(function () {
+            output.push(Date.now());
+            done();
+          }, 400);
+        },
+        // 2
+        function () {
+          output.push(Date.now());
+        },
+        // 3
+        function (done) {
+          setTimeout(function () {
+            output.push(Date.now());
+            done();
+          }, 800);
+        },
+        // 4
+        function () {
+          output.push(Date.now());
+        }
+      ];
+
+      fns = asynchronify(fns);
+      fns.forEach(function (fn) {
+      });
+      chain(fns, function () {
+        expect(output[1] - output[0]).to.be.least(400);
+        expect(output[2] - output[1]).to.be.most(10);
+        expect(output[3] - output[2]).to.be.least(800);
+        expect(output[4] - output[3]).to.be.most(10);
+        done();
+      })();
     });
   });
 });

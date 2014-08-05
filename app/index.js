@@ -1,3 +1,7 @@
+if (! Element) {
+  var Element = function Element () {};
+}
+
 // @param {string=}
 // @param {Object=}
 // @return {Object}
@@ -43,30 +47,73 @@ module('bootloader', {
 
   // @param {Object}
   init: function init (params) {
-    var i, l, fn, inits, key, keys;
     params = params || {};
 
     // Load
-    inits = this.loadLevel(module, [], {});
+    var inits = this.loadLevel(module, [], {});
 
     // Remove bootloader-related inits before doing anything
     delete inits[''];
     delete inits.bootloader;
 
-    // Build dependency graphs and sort by score
-    inits = this.buildDependents(inits);
-    inits = this.sortInits(inits);
+    var build = this.buildDependents;
+    var sort = this.sortInits;
+    var async = this.asynchronify;
+    var chain = this.chain;
+    var fn = chain(async(sort(build(inits))));
 
-    // Actually initialize!
-    keys = Object.keys(inits);
-    for (i = 0, l = keys.length; i < l; i++) {
-      key = keys[i];
-      fn = inits[key].fn;
+    fn();
+  },
+
+  // @param {Array.<function>}
+  // @return {Array.<function>}
+  asynchronify: function asynchronify (fns) {
+    var output = [];
+
+    function async (fn, done) {
+      fn();
+      done();
+    }
+
+    for (i = 0, l = fns.length; i < l; i++) {
+      var fn = fns[i];
 
       if (typeof fn === 'function') {
-        fn(params);
+        var fnStr = fn.toString();
+        var argStartIndex = fnStr.indexOf('(');
+        var argEndIndex = fnStr.indexOf(')');
+        var argList = fnStr.substring(argStartIndex + 1, argEndIndex);
+        var args = argList.replace(/ /g, '');
+
+        // Normal function -> "asynchronous" function
+        if (args.length === 0) {
+          fn = async.bind(this, fn);
+        }
+
+        output.push(fn);
       }
     }
+
+    return output;
+  },
+
+  // @param {Array.<function>}
+  // @param {function=}
+  // @return {Array.<function>}
+  chain: function chain (fns, done) {
+    function seq (fn1, fn2) {
+      fn1(fn2);
+    }
+
+    fns.push(done || function () {});
+
+    // Start from the second to the end
+    for (var i = fns.length - 2, l = 0; i >= l; i--) {
+      fns[i] = seq.bind(this, fns[i], fns[i + 1]);
+    }
+
+    // Only need the head
+    return fns[0];
   },
 
   // @param {Object.<string, *>}
@@ -99,8 +146,7 @@ module('bootloader', {
       key = keys[i];
       value = node[key];
 
-      if (
-          // It exists
+      if (// It exists
           (!! value) &&
           // It's an object
           (typeof value === 'object') &&
@@ -199,7 +245,12 @@ module('bootloader', {
 
     // Sort the initializers by score. The higher the score the more depended
     // upon, so we need to reverse it.
-    return module.bootloader.quicksort.sort(initArr).reverse();
+    inits = module.bootloader.quicksort.sort(initArr).reverse();
+
+    // We only care about the functions
+    return inits.map(function (init) {
+      return init.fn;
+    });
   }
 });
 

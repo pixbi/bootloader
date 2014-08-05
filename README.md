@@ -16,10 +16,6 @@ The bootloader performs the following:
 * Remove all `init` functions from the structure to prevent repeated calls
 * Also remove the `dependsOn` attribute after initialization
 
-Note that the bootloader expects all `init` functions to be synchronous.  Of
-course `init` may invoke asynchronous operations; it's just that the bootloader
-does not wait for it to complete.
-
 The bootloader itself is written in object-literal module style and expects the
 application to call `module.init(1)`, which would execute the bootloader and
 bootstrap all registered modules. Note that calling `module.init(1)` would also
@@ -92,3 +88,25 @@ primus
 secundus
 triens
 ```
+
+### Asynchronous Initialization
+
+`init` functions can be either synchronous or asynchronous. If the bootloader
+detects that the `init` function takes an argument, like:
+
+```js
+module('example', {
+  init: function init (done) {
+    // ...
+    setTimeout(done, 1000);
+  }
+});
+```
+
+The above module will block all other modules that have a higher dependency
+score from loading for a second. Note that it does not mean that modules that
+depend on it, but modules who happen to have a higher score, which guarantees
+that its dependencies (but also some other unrelated modules) are blocked. This
+is due to the fact that we use a simple algorithm to calculate dependency
+scores (vs building a full-fledged dependency graph) to save on some space and
+cycles.
