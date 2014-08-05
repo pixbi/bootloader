@@ -44,6 +44,7 @@ module('bootloader', {
   // @param {Object}
   init: function init (config) {
     var i, l, fn, inits, key, keys;
+    config = config || {};
 
     // Load
     inits = this.loadLevel(module, [], {});
