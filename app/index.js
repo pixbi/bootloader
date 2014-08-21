@@ -1,7 +1,3 @@
-if (! Element) {
-  var Element = function Element () {};
-}
-
 // @param {string=}
 // @param {Object=}
 // @return {Object}
@@ -15,7 +11,7 @@ function module (path, object) {
   function asynchronify (fn, ctx) {
     function async (fn, params, done) {
       fn.call(this, params);
-      done && done();
+      if (done) done();
     }
 
     var fnStr = fn.toString();
