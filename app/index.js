@@ -18,10 +18,10 @@ function module (path, object) {
     var argStartIndex = fnStr.indexOf('(');
     var argEndIndex = fnStr.indexOf(')');
     var argList = fnStr.substring(argStartIndex + 1, argEndIndex);
-    var args = argList.replace(/ /g, '');
+    var onlyOneArg = argList.indexOf(',') < 0;
 
     // Normal function -> "asynchronous" function
-    if (args.indexOf('done') < 0) {
+    if (onlyOneArg) {
       fn = async.bind(ctx, fn);
     } else {
       fn = fn.bind(ctx);
