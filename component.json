@@ -2,9 +2,13 @@
   "name": "bootloader",
   "repo": "pixbi/bootloader",
   "description": "Object-literal module system bootloader",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "dependencies": {},
   "scripts": [
     "app/index.js"
-  ]
+  ],
+  "styles": [],
+  "templates": [],
+  "images": [],
+  "fonts": []
 }
