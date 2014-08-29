@@ -1,4 +1,4 @@
-# Frontend Bootloader
+# Bootloader
 
 The bootloader provides a `module(2)` function that takes a module path and a
 module definition. The path is written in normal dot notation. `module(2)` will
