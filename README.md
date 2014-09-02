@@ -110,3 +110,9 @@ that its dependencies (but also some other unrelated modules) are blocked. This
 is due to the fact that we use a simple algorithm to calculate dependency
 scores (vs building a full-fledged dependency graph) to save on some space and
 cycles.
+
+
+## Copyright and License
+
+Code and documentation copyright 2014 Pixbi. Code released under the MIT
+license. Docs released under Creative Commons.
